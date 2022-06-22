@@ -8,12 +8,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=neon
-PKG_VERSION:=0.31.1
-PKG_RELEASE:=2
+PKG_VERSION:=0.32.1
+PKG_RELEASE:=$(AUTORELEASE)
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://notroj.github.io/neon
-PKG_HASH:=c9dfcee723050df37ce18ba449d7707b78e7ab8230f3a4c59d9112e17dc2718d
+PKG_HASH:=05c54bc115030c89e463a4fb28d3a3f8215879528ba5ca70d676d3d21bf3af52
 
 PKG_MAINTAINER:=Federico Di Marco <fededim@gmail.com>
 PKG_LICENSE:=LGPL-2.1-or-later
@@ -65,8 +65,9 @@ define Build/InstallDev
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libneon.{a,so*} $(1)/usr/lib/
 	$(INSTALL_DIR) $(1)/usr/lib/pkgconfig
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/pkgconfig/neon.pc $(1)/usr/lib/pkgconfig/
-	$(SED) 's,-I$$$${includedir}/,-I$(STAGING_DIR)/usr/include/,g' $(1)/usr/bin/neon-config
-	$(SED) 's,-L$$$${libdir},,g' $(1)/usr/bin/neon-config
+	$(SED) 's,^\(prefix\|exec_prefix\)=.*,\1=$(STAGING_DIR)/usr,g' $(1)/usr/bin/neon-config
+	$(INSTALL_DIR) $(2)/bin
+	$(LN) ../../usr/bin/neon-config $(2)/bin/neon-config
 endef
 
 define Package/libneon/install

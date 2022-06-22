@@ -8,12 +8,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=alpine
-PKG_VERSION:=2.23
-PKG_RELEASE:=1
+PKG_VERSION:=2.25
+PKG_RELEASE:=$(AUTORELEASE)
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
 PKG_SOURCE_URL:=http://alpine.x10host.com/alpine/release/src
-PKG_HASH:=793a61215c005b5fcffb48f642f125915276b7ec7827508dd9e83d4c4da91f7b
+PKG_HASH:=658a150982f6740bb4128e6dd81188eaa1212ca0bf689b83c2093bb518ecf776
 
 PKG_MAINTAINER:=Antti Seppälä <a.seppala@gmail.com>
 PKG_LICENSE:=Apache-2.0
@@ -55,6 +55,7 @@ endef
 define Package/alpine-nossl
 $(call Package/alpine/Default)
   TITLE+= (without OpenSSL support)
+  DEPENDS+= @BROKEN
   VARIANT:=nossl
 endef
 

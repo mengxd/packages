@@ -8,8 +8,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=chicken-scheme
-PKG_VERSION=5.2.0
-PKG_RELEASE:=1
+PKG_VERSION:=5.2.0
+PKG_RELEASE:=2
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/chicken-$(PKG_VERSION)
 PKG_SOURCE:=chicken-$(PKG_VERSION).tar.gz
@@ -22,16 +22,13 @@ PKG_LICENSE_FILES:=LICENSE
 
 include $(INCLUDE_DIR)/package.mk
 
-
-
-
 define Package/chicken-scheme/Default
+  TITLE:=Chicken Scheme
   SECTION:=lang
   CATEGORY:=Languages
   URL:=https://call-cc.org
   ABI_VERSION:=11
 endef
-
 
 ##
 ## chicken-scheme-interpreter
@@ -39,9 +36,8 @@ endef
 
 define Package/chicken-scheme-interpreter
 $(call Package/chicken-scheme/Default)
-  TITLE:=Chicken Scheme -- interpreter only
-  SECTION:=lang
-  CATEGORY:=Languages
+  TITLE+=interpreter only
+  CONFLICTS:=chicken-scheme-full
 endef
 
 define Package/chicken-scheme-interpreter/description
@@ -53,10 +49,7 @@ define Package/chicken-scheme-interpreter/description
   For more information, please refer to the Chicken Scheme website at https://call-cc.org.
 endef
 
-
-# csc calls gcc with "-lm -ldl", but "-lm" doesn't work with musl,
-# so we set LIBRARIES=-lm
-MAKE_FLAGS += PLATFORM=linux C_COMPILER=$(TARGET_CC) LINKER=$(TARGET_CC) PREFIX=/usr C_COMPILER_OPTIMIZATION_OPTIONS="$(TARGET_CFLAGS)" LIBRARIES=-lm
+MAKE_FLAGS += PLATFORM=linux C_COMPILER=$(TARGET_CC) LINKER=$(TARGET_CC) PREFIX=/usr C_COMPILER_OPTIMIZATION_OPTIONS="$(TARGET_CFLAGS)"
 
 # not installed:
 # - csc and chicken, the compiler
@@ -98,9 +91,7 @@ include $(TOPDIR)/rules.mk
 
 define Package/chicken-scheme-full
 $(call Package/chicken-scheme/Default)
-  TITLE:=Chicken Scheme -- full package
-  SECTION:=lang
-  CATEGORY:=Languages
+  TITLE+=full package
   # csc depends on gcc; chicken-install uses the 'install' command from coreutils
   EXTRA_DEPENDS:= gcc, coreutils-install
 endef

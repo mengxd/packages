@@ -6,23 +6,20 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=grilo-plugins
-PKG_VERSION:=0.3.11
-PKG_RELEASE:=2
-
-PKG_MAINTAINER:=W. Michael Petullo <mike@flyn.org>
-PKG_LICENSE:=LGPLv2.1
-PKG_LICENSE_FILES:=COPYING
+PKG_VERSION:=0.3.14
+PKG_RELEASE:=$(AUTORELEASE)
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
 PKG_SOURCE_URL:=@GNOME/grilo-plugins/0.3/
-PKG_HASH:=dde2e605b1994341c6bf012493e056b406b08571834dea3b3c671d5b8b1dcd73
+PKG_HASH:=686844b34ec73b24931ff6cc4f6033f0072947a6db60acdc7fb3eaf157a581c8
 
-PKG_INSTALL:=1
-PKG_BUILD_DEPENDS:=meson/host
+PKG_MAINTAINER:=W. Michael Petullo <mike@flyn.org>
+PKG_LICENSE:=LGPL-2.1-or-later
+PKG_LICENSE_FILES:=COPYING
 
 include $(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/nls.mk
-include ../../devel/meson/meson.mk
+include $(INCLUDE_DIR)/meson.mk
 
 define Package/grilo-plugins/Default
   SECTION:=multimedia
@@ -45,21 +42,29 @@ define Package/grilo/decription
 endef
 
 MESON_ARGS += \
-	-Denable-filesystem=no \
-	-Denable-optical-media=no \
-	-Denable-youtube=no \
-	-Denable-flickr=no \
-	-Denable-podcasts=no \
 	-Denable-bookmarks=no \
-	-Denable-lua-factory=no \
-	-Denable-metadata-store=no \
-	-Denable-vimeo=no \
-	-Denable-tracker=no \
-	-Denable-local-metadata=no \
-	-Denable-chromaprint=no \
-	-Denable-thetvdb=no \
-	-Denable-tmdb=no \
+	-Denable-chromaprint=$(if $(CONFIG_PACKAGE_grilo-plugins-chromaprint),yes,no) \
+	-Denable-dleyna=$(if $(CONFIG_PACKAGE_grilo-plugins-dleyna),yes,no) \
+	-Denable-dmap=$(if $(CONFIG_PACKAGE_grilo-plugins-dmap),yes,no) \
+	-Denable-filesystem=no \
+	-Denable-flickr=no \
 	-Denable-freebox=no \
+	-Denable-gravatar=$(if $(CONFIG_PACKAGE_grilo-plugins-gravatar),yes,no) \
+	-Dhelp=no \
+	-Denable-local-metadata=no \
+	-Denable-lua-factory=no \
+	-Denable-magnatune=$(if $(CONFIG_PACKAGE_grilo-plugins-magnatune),yes,no) \
+	-Denable-metadata-store=$(if $(CONFIG_PACKAGE_grilo-plugins-metadata-store),yes,no) \
+	-Denable-opensubtitles=$(if $(CONFIG_PACKAGE_grilo-plugins-opensubtitles),yes,no) \
+	-Denable-optical-media=no \
+	-Denable-podcasts=no \
+	-Denable-raitv=$(if $(CONFIG_PACKAGE_grilo-plugins-raitv),yes,no) \
+	-Denable-shoutcast=$(if $(CONFIG_PACKAGE_grilo-plugins-shoutcast),yes,no) \
+	-Denable-thetvdb=no \
+	-Denable-tmdb=$(if $(CONFIG_PACKAGE_grilo-plugins-tmdb),yes,no) \
+	-Denable-tracker=no \
+	-Denable-tracker3=no \
+	-Denable-youtube=no \
 	--wrap-mode=nodownload
 
 define Package/grilo-plugins/install
@@ -88,11 +93,13 @@ endef
 
 $(eval $(call BuildPackage,grilo-plugins))
 
+$(eval $(call BuildPlugin,chromaprint,Chromaprint,chromaprint,+libgstreamer1,30))
 $(eval $(call BuildPlugin,dleyna,DLNA sharing,dleyna,,30))
 $(eval $(call BuildPlugin,dmap,DAAP and DPAP sharing,daap dpap,libdmapsharing,30))
 $(eval $(call BuildPlugin,gravatar,Gravatar provider,gravatar,,30))
-$(eval $(call BuildPlugin,jamendo,Jamendo sharing,jamendo,,30))
 $(eval $(call BuildPlugin,magnatune,Magnatune sharing,magnatune,,30))
+$(eval $(call BuildPlugin,metadata-store,Metadata Store,metadatastore,,30))
 $(eval $(call BuildPlugin,opensubtitles,Open subtitles provider,opensubtitles,,30))
 $(eval $(call BuildPlugin,raitv,Rai.tv sharing,raitv,,30))
 $(eval $(call BuildPlugin,shoutcast,SHOUTcast sharing,shoutcast,,30))
+$(eval $(call BuildPlugin,tmdb,TMDb,tmdb,+json-glib,30))

@@ -1,7 +1,10 @@
 #!/bin/sh
-. /lib/functions.sh
-. ../netifd-proto.sh
-init_proto "$@"
+
+[ -n "$INCLUDE_ONLY" ] || {
+	. /lib/functions.sh
+	. ../netifd-proto.sh
+	init_proto "$@"
+}
 
 append_args() {
 	while [ $# -gt 0 ]; do
@@ -15,6 +18,8 @@ proto_openconnect_init_config() {
 	proto_config_add_int "port"
 	proto_config_add_int "mtu"
 	proto_config_add_int "juniper"
+	proto_config_add_string "vpn_protocol"
+	proto_config_add_boolean "no_dtls"
 	proto_config_add_string "interface"
 	proto_config_add_string "username"
 	proto_config_add_string "serverhash"
@@ -39,22 +44,43 @@ proto_openconnect_add_form_entry() {
 proto_openconnect_setup() {
 	local config="$1"
 
-	json_get_vars server port interface username serverhash authgroup usergroup password password2 token_mode token_secret token_script os csd_wrapper mtu juniper form_entry
+	json_get_vars \
+		authgroup \
+		csd_wrapper \
+		form_entry \
+		interface \
+		juniper \
+		vpn_protocol \
+		mtu \
+		no_dtls \
+		os \
+		password \
+		password2 \
+		port \
+		server \
+		serverhash \
+		token_mode \
+		token_script \
+		token_secret \
+		usergroup \
+		username \
 
-	grep -q tun /proc/modules || insmod tun
 	ifname="vpn-$config"
 
 	logger -t openconnect "initializing..."
 
-	logger -t "openconnect" "adding host dependency for $server at $config"
-	for ip in $(resolveip -t 10 "$server"); do
-		logger -t "openconnect" "adding host dependency for $ip at $config"
-		proto_add_host_dependency "$config" "$ip" "$interface"
-	done
+	[ -n "$interface" ] && {
+		logger -t "openconnect" "adding host dependency for $server at $config"
+		for ip in $(resolveip -t 10 "$server"); do
+			logger -t "openconnect" "adding host dependency for $ip at $config"
+			proto_add_host_dependency "$config" "$ip" "$interface"
+		done
+	}
 
 	[ -n "$port" ] && port=":$port"
 
 	append_args "$server$port" -i "$ifname" --non-inter --syslog --script /lib/netifd/vpnc-script
+	[ "$no_dtls" = 1 ] && append_args --no-dtls
 	[ -n "$mtu" ] && append_args --mtu "$mtu"
 
 	# migrate to standard config files
@@ -69,9 +95,13 @@ proto_openconnect_setup() {
 		append_args --no-system-trust
 	}
 
-	if [ "${juniper:-0}" -gt 0 ]; then
-		append_args --juniper
-	fi
+	[ "${juniper:-0}" -gt 0 ] && [ -z "$vpn_protocol" ] && {
+		vpn_protocol="nc"
+	}
+
+	[ -n "$vpn_protocol" ] && {
+		append_args --protocol "$vpn_protocol"
+	}
 
 	[ -n "$serverhash" ] && {
 		append_args "--servercert=$serverhash"
@@ -89,7 +119,7 @@ proto_openconnect_setup() {
 			[ -n "$password2" ] && echo "$password2" >> "$pwfile"
 		}
 		[ "$token_mode" = "script" ] && {
-			$token_script > "$pwfile" 2> /dev/null || {
+			$token_script >> "$pwfile" 2> /dev/null || {
 				logger -t openconenct "Cannot get password from script '$token_script'"
 				proto_setup_failed "$config"
 			}
@@ -124,4 +154,6 @@ proto_openconnect_teardown() {
 	proto_kill_command "$config" 2
 }
 
-add_protocol openconnect
+[ -n "$INCLUDE_ONLY" ] || {
+	add_protocol openconnect
+}

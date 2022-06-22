@@ -9,12 +9,12 @@ include $(TOPDIR)/rules.mk
 
 PKG_NPM_NAME:=node-hid
 PKG_NAME:=$(PKG_NPM_NAME)
-PKG_VERSION:=1.2.0
-PKG_RELEASE:=1
+PKG_VERSION:=2.1.1
+PKG_RELEASE:=2
 
 PKG_SOURCE:=$(PKG_NPM_NAME)-$(PKG_VERSION).tgz
 PKG_SOURCE_URL:=https://registry.npmjs.org/$(PKG_NPM_NAME)/-/
-PKG_HASH:=b4a3e4c5a42dcdb4b6ef3ceeec18ed073322e8bca4160b95ef1671b062796bde
+PKG_HASH:=6c1f05935215feed4e8d2f4aecf31abbad8fa783d252b0bd6041ed2f2e96e9ba
 
 PKG_BUILD_DEPENDS:=node/host
 PKG_USE_MIPS16:=0
@@ -31,8 +31,8 @@ define Package/node-hid
   SECTION:=lang
   CATEGORY:=Languages
   TITLE:=Node.js package to access HID devices
-  URL:=https://github.com/node-hid/node-hid
-  DEPENDS:=+node +node-npm +libusb-1.0 +hidapi +libudev-fbsd $(ICONV_DEPENDS)
+  URL:=https://www.npmjs.com/package/node-hid
+  DEPENDS:=+node +node-npm +libusb-1.0 +libudev $(ICONV_DEPENDS)
 endef
 
 define Package/node-hid/description
@@ -48,9 +48,7 @@ TMPNPM:=$(shell mktemp -u XXXXXXXXXX)
 TARGET_CFLAGS+=$(FPIC) -I$(STAGING_DIR)/usr/include/libusb-1.0
 TARGET_LDFLAGS+=$(if $(ICONV_FULL),-liconv)
 
-define Build/Compile
-	git init $(PKG_BUILD_DIR)
-	$(MAKE_VARS) \
+NPM_FLAGS=$(MAKE_VARS) \
 	$(MAKE_FLAGS) \
 	npm_config_arch=$(NODEJS_CPU) \
 	npm_config_target_arch=$(NODEJS_CPU) \
@@ -58,17 +56,19 @@ define Build/Compile
 	npm_config_nodedir=$(STAGING_DIR)/usr/ \
 	npm_config_prefix=$(PKG_INSTALL_DIR)/usr/ \
 	npm_config_cache=$(TMP_DIR)/npm-cache-$(TMPNPM) \
-	npm_config_tmp=$(TMP_DIR)/npm-tmp-$(TMPNPM) \
-	npm install -g $(PKG_BUILD_DIR)
+	npm_config_tmp=$(TMP_DIR)/npm-tmp-$(TMPNPM)
+
+define Build/Compile
+	$(NPM_FLAGS) npm i -g --production $(PKG_BUILD_DIR) --ignore-scripts
+	GYP_DEFINES='driver="hidraw"' \
+	$(NPM_FLAGS) npm i --production --prefix=$(PKG_BUILD_DIR) --target_arch=$(NODEJS_CPU) --prefer-dedupe
 	rm -rf $(TMP_DIR)/npm-tmp-$(TMPNPM)
 	rm -rf $(TMP_DIR)/npm-cache-$(TMPNPM)
 endef
 
 define Package/node-hid/install
 	$(INSTALL_DIR) $(1)/usr/lib/node/$(PKG_NPM_NAME)
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/node_modules/$(PKG_NPM_NAME)/{package.json,*.md} \
-		$(1)/usr/lib/node/$(PKG_NPM_NAME)/
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/node_modules/$(PKG_NPM_NAME)/{binding.gyp,*.js} \
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/node_modules/$(PKG_NPM_NAME)/{package.json,*.md,*.js} \
 		$(1)/usr/lib/node/$(PKG_NPM_NAME)/
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/node_modules/$(PKG_NPM_NAME)/{node_modules,src} \
 		$(1)/usr/lib/node/$(PKG_NPM_NAME)/
@@ -76,7 +76,7 @@ define Package/node-hid/install
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/node_modules/$(PKG_NPM_NAME)/build/Release/HID*.node \
 		$(1)/usr/lib/node/$(PKG_NPM_NAME)/build/Release/
 	$(INSTALL_DIR) $(1)/usr/bin
-	$(LN) ../lib/node/node-hid/src/show-devices.js $(1)/usr/bin/hid-showdevices
+	$(LN) ../lib/node/$(PKG_NPM_NAME)/src/show-devices.js $(1)/usr/bin/hid-showdevices
 endef
 
 $(eval $(call BuildPackage,node-hid))

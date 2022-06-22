@@ -6,24 +6,23 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=libsoup
-PKG_VERSION:=2.70.0
-PKG_RELEASE:=1
+PKG_VERSION:=2.74.2
+PKG_RELEASE:=$(AUTORELEASE)
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
-PKG_SOURCE_URL:=@GNOME/$(PKG_NAME)/2.70
-PKG_HASH:=54b020f74aefa438918d8e53cff62e2b1e59efe2de53e06b19a4b07b1f4d5342
+PKG_SOURCE_URL:=@GNOME/$(PKG_NAME)/2.74
+PKG_HASH:=f0a427656e5fe19e1df71c107e88dfa1b2e673c25c547b7823b6018b40d01159
 
 PKG_MAINTAINER:=W. Michael Petullo <mike@flyn.org>
 PKG_LICENSE:=LGPL-2.1-or-later
 PKG_LICENSE_FILES:=COPYING
 PKG_CPE_ID:=cpe:/a:gnome:libsoup
 
-PKG_BUILD_DEPENDS:=meson/host glib2/host
-PKG_INSTALL:=1
+PKG_BUILD_DEPENDS:=glib2/host
 
 include $(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/nls.mk
-include ../../devel/meson/meson.mk
+include $(INCLUDE_DIR)/meson.mk
 
 define Package/libsoup
   SECTION:=libs
@@ -43,7 +42,8 @@ MESON_ARGS += \
 	-Dvapi=disabled \
 	-Dgtk_doc=false \
 	-Dtests=false \
-	-Dinstalled_tests=false
+	-Dinstalled_tests=false \
+	-Dsysprof=disabled
 
 define package/libsoup/decription
 Libsoup is an HTTP library implementation in C

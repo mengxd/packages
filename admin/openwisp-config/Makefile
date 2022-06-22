@@ -5,58 +5,43 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=openwisp-config
-PKG_VERSION:=0.4.5
-PKG_RELEASE:=2
+PKG_RELEASE:=1
 
-PKG_SOURCE_PROTO:=git
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
+PKG_MAINTAINER:=Federico Capoano <f.capoano@openwisp.io>
+PKG_LICENSE:=GPL3.0-or-later
+
 PKG_SOURCE_URL:=https://github.com/openwisp/openwisp-config.git
-PKG_SOURCE_VERSION:=0.4.5
-PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_SOURCE_VERSION)
-PKG_MIRROR_HASH:=017a8ed35ebfda2805426e7da02559d5cc2845ee9ded60fdae8e848d377424fb
-PKG_LICENSE:=GPL-3.0
+PKG_MIRROR_HASH:=b1f5682715cc5b5623b2acf49ebb75d8bac1b58094981b61ede3ca392bdfa269
+PKG_SOURCE_PROTO:=git
+PKG_SOURCE_DATE:=2021-12-07
+PKG_SOURCE_VERSION:=08df34db29180a0d13c2e357723e8c546523014a
 PKGARCH:=all
 
 include $(INCLUDE_DIR)/package.mk
 
-define Package/openwisp-config/default
-	TITLE:=Remote configuration management agent ($(2) variant)
-	CATEGORY:=Administration
-	SECTION:=admin
-	SUBMENU:=OpenWISP
-	DEPENDS:=+curl +lua +libuci-lua +luafilesystem $(3)
-	VARIANT:=$(1)
-	MAINTAINER:=Federico Capoano <f.capoano@cineca.it>
-	URL:=http://openwisp.org
+define Package/openwisp-config
+  TITLE:=Remote configuration management agent
+  CATEGORY:=Administration
+  SECTION:=admin
+  SUBMENU:=openwisp
+  DEPENDS:=+curl \
+    +lua \
+    +libuci-lua \
+    +luafilesystem \
+    +luci-lib-nixio \
+    +ca-certificates
+  PKGARCH:=all
+  URL:=https://openwisp.org
 endef
-
-Package/openwisp-config-openssl=$(call Package/openwisp-config/default,openssl,OpenSSL,+ca-certificates +libopenssl)
-Package/openwisp-config-mbedtls=$(call Package/openwisp-config/default,mbedtls,mbedTLS,+ca-certificates +libmbedtls)
-Package/openwisp-config-cyassl=$(call Package/openwisp-config/default,cyassl,CyaSSL,+ca-certificates +libcyassl)
-Package/openwisp-config-nossl=$(call Package/openwisp-config/default,nossl,No SSL)
 
 define Build/Compile
 endef
 
-define Package/openwisp-config-$(BUILD_VARIANT)/conffiles
+define Package/openwisp-config/conffiles
 /etc/config/openwisp
 endef
 
-ifeq ($(BUILD_VARIANT),openssl)
-CONFIG_OPENWISP_UCI:=ssl
-endif
-ifeq ($(BUILD_VARIANT),mbedtls)
-CONFIG_OPENWISP_UCI:=ssl
-endif
-ifeq ($(BUILD_VARIANT),cyassl)
-CONFIG_OPENWISP_UCI:=ssl
-endif
-ifeq ($(BUILD_VARIANT),nossl)
-CONFIG_OPENWISP_UCI:=nossl
-endif
-
-
-define Package/openwisp-config-$(BUILD_VARIANT)/install
+define Package/openwisp-config/install
 	$(INSTALL_DIR) \
 		$(1)/usr/sbin \
 		$(1)/etc/init.d \
@@ -72,7 +57,7 @@ define Package/openwisp-config-$(BUILD_VARIANT)/install
 		$(PKG_BUILD_DIR)/openwisp-config/files/openwisp.init \
 		$(1)/etc/init.d/openwisp_config
 
-	$(INSTALL_CONF) $(PKG_BUILD_DIR)/openwisp-config/files/openwisp-$(CONFIG_OPENWISP_UCI).config \
+	$(INSTALL_CONF) $(PKG_BUILD_DIR)/openwisp-config/files/openwisp.config \
 		$(1)/etc/config/openwisp
 
 	$(INSTALL_BIN) \
@@ -82,6 +67,10 @@ define Package/openwisp-config-$(BUILD_VARIANT)/install
 	$(INSTALL_BIN) \
 		$(PKG_BUILD_DIR)/openwisp-config/files/lib/openwisp/utils.lua \
 		$(1)/usr/lib/lua/openwisp/utils.lua
+
+	$(INSTALL_BIN) \
+		$(PKG_BUILD_DIR)/openwisp-config/files/lib/openwisp/net.lua \
+		$(1)/usr/lib/lua/openwisp/net.lua
 
 	$(INSTALL_BIN) \
 		$(PKG_BUILD_DIR)/openwisp-config/files/sbin/openwisp-store-unmanaged.lua \
@@ -103,10 +92,11 @@ define Package/openwisp-config-$(BUILD_VARIANT)/install
 		$(PKG_BUILD_DIR)/openwisp-config/files/sbin/openwisp-update-config.lua \
 		$(1)/usr/sbin/openwisp-update-config
 
+	$(INSTALL_BIN) \
+		$(PKG_BUILD_DIR)/openwisp-config/files/sbin/openwisp-get-address.lua \
+		$(1)/usr/sbin/openwisp-get-address
+
 	$(CP) $(PKG_BUILD_DIR)/VERSION $(1)/etc/openwisp/
 endef
 
-$(eval $(call BuildPackage,openwisp-config-openssl))
-$(eval $(call BuildPackage,openwisp-config-mbedtls))
-$(eval $(call BuildPackage,openwisp-config-cyassl))
-$(eval $(call BuildPackage,openwisp-config-nossl))
+$(eval $(call BuildPackage,openwisp-config))

@@ -8,25 +8,23 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=pulseaudio
-PKG_VERSION:=13.0
-PKG_RELEASE:=4
+PKG_VERSION:=14.2
+PKG_RELEASE:=2
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
 PKG_SOURCE_URL:=https://freedesktop.org/software/pulseaudio/releases
-PKG_HASH:=961b23ca1acfd28f2bc87414c27bb40e12436efcf2158d29721b1e89f3f28057
+PKG_HASH:=75d3f7742c1ae449049a4c88900e454b8b350ecaa8c544f3488a2562a9ff66f1
 
 PKG_MAINTAINER:=Peter Wagner <tripolar@gmx.at>
 PKG_LICENSE:=LGPL-2.1-or-later
 PKG_LICENSE_FILES:=GPL LICENSE
 PKG_CPE_ID:=cpe:/a:pulseaudio:pulseaudio
 
-PKG_INSTALL:=1
 PKG_USE_MIPS16:=0
-PKG_BUILD_DEPENDS:=meson/host
 
 include $(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/nls.mk
-include ../../devel/meson/meson.mk
+include $(INCLUDE_DIR)/meson.mk
 
 define Package/pulseaudio/Default
   SECTION:=sound
@@ -105,16 +103,18 @@ MESON_ARGS += \
 	-Daccess_group=audio \
 	-Ddatabase=simple \
 	-Dlegacy-database-entry-format=false \
+	-Dstream-restore-clear-old-devices=true \
 	-Drunning-from-build-tree=false \
 	-Datomic-arm-linux-helpers=false \
+	-Datomic-arm-memory-barrier=false \
 	-Dalsa=enabled \
 	-Dasyncns=disabled \
-	-Dbluez5=false \
 	-Dbluez5-native-headset=false \
 	-Dbluez5-ofono-headset=false \
 	-Dfftw=disabled \
 	-Dglib=disabled \
 	-Dgsettings=disabled \
+	-Dgstreamer=disabled \
 	-Dgtk=disabled \
 	-Dhal-compat=false \
 	-Dipv6=true \
@@ -134,16 +134,18 @@ MESON_ARGS += \
 ifeq ($(BUILD_VARIANT),avahi)
 MESON_ARGS += \
 	-Davahi=enabled \
+	-Dbluez5=true \
 	-Ddbus=enabled
 endif
 
 ifeq ($(BUILD_VARIANT),noavahi)
 MESON_ARGS += \
 	-Davahi=disabled \
+	-Dbluez5=false \
 	-Ddbus=disabled
 endif
 
-TARGET_LDFLAGS += -Wl,--gc-sections -liconv
+TARGET_LDFLAGS += -Wl,--gc-sections $(if $(INTL_FULL),-lintl)
 
 define Build/Prepare
 	$(call Build/Prepare/Default)

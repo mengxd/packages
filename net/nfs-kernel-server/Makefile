@@ -7,9 +7,9 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=nfs-kernel-server
-PKG_VERSION:=2.3.4
-PKG_RELEASE:=2
-PKG_HASH:=8a6bafd5a33c4259e6e5093d126384cbe33acb10135578b5faa60c40f2f5e995
+PKG_VERSION:=2.5.4
+PKG_RELEASE:=5
+PKG_HASH:=546ce4b51eeebc66e354b6cc6ca0ce509437efbdef0caaf99389534eef0e598b
 
 PKG_SOURCE_URL:=@SF/nfs
 PKG_SOURCE:=nfs-utils-$(PKG_VERSION).tar.xz
@@ -100,8 +100,7 @@ TARGET_CFLAGS += -Wno-error=implicit-function-declaration \
 		 -Wno-error=undef \
 		 -Wno-error=missing-include-dirs
 
-TARGET_LDFLAGS += -Wl,-rpath-link=$(STAGING_DIR)/usr/lib \
-		  -L$(STAGING_DIR)/usr/lib/libevent
+TARGET_LDFLAGS += -L$(STAGING_DIR)/usr/lib/libevent
 
 CONFIGURE_ARGS += \
 	--disable-caps \
@@ -150,6 +149,8 @@ HOST_CONFIGURE_VARS += \
 	ac_cv_header_nfsidmap_h=yes \
 	ac_cv_header_blkid_blkid_h=yes \
 	ac_cv_lib_resolv___res_querydomain=yes \
+	ac_cv_func_prctl=yes \
+	enable_ipv6=no \
 	GSSGLUE_CFLAGS=" " \
 	GSSGLUE_LIBS=" " \
 	RPCSECGSS_CFLAGS=" " \

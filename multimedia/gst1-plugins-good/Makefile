@@ -8,12 +8,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=gst1-plugins-good
-PKG_VERSION:=1.17.1
-PKG_RELEASE:=1
+PKG_VERSION:=1.18.5
+PKG_RELEASE:=$(AUTORELEASE)
 
 PKG_SOURCE:=gst-plugins-good-$(PKG_VERSION).tar.xz
 PKG_SOURCE_URL:=https://gstreamer.freedesktop.org/src/gst-plugins-good/
-PKG_HASH:=ea8957460ed38261e5c4bf6a8bf98d946298b756a695b27c9b1209aa7b76b0d7
+PKG_HASH:=3aaeeea7765fbf8801acce4a503a9b05f73f04e8a35352e9d00232cfd555796b
 PKG_BUILD_DIR:=$(BUILD_DIR)/gst-plugins-good-$(PKG_VERSION)
 
 PKG_MAINTAINER:=W. Michael Petullo <mike@flyn.org> \
@@ -22,11 +22,9 @@ PKG_LICENSE:=LGPL-2.1-or-later
 PKG_LICENSE_FILES:=COPYING
 PKG_CPE_ID:=cpe:/a:gstreamer:good_plug-ins
 
-PKG_INSTALL:=1
-
 include $(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/nls.mk
-include ../../devel/meson/meson.mk
+include $(INCLUDE_DIR)/meson.mk
 
 PKG_CONFIG_DEPENDS:= \
 	CONFIG_PACKAGE_gst1-mod-lame \
@@ -282,7 +280,7 @@ $(eval $(call GstBuildPlugin,png,png support,video,,+libpng))
 $(eval $(call GstBuildPlugin,shout2,shout2 support,audio,,+libshout))
 $(eval $(call GstBuildPlugin,soup,soup input,audio tag,,+libsoup))
 $(eval $(call GstBuildPlugin,speex,speex support,audio tag,,+libspeex))
-#$(eval $(call GstBuildPlugin,taglib,taglib support,tag,,))
+$(eval $(call GstBuildPlugin,taglib,taglib support,tag,,+taglib))
 $(eval $(call GstBuildPlugin,video4linux2,video4linux2 support,video allocators,,+libv4l))
 $(eval $(call GstBuildPlugin,vpx,vpx support,tag video,,+libvpx))
 #$(eval $(call GstBuildPlugin,wavpack,Wav packer,audio riff tag,,))

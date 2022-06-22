@@ -8,12 +8,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=gst1-plugins-base
-PKG_VERSION:=1.17.1
-PKG_RELEASE:=1
+PKG_VERSION:=1.18.5
+PKG_RELEASE:=$(AUTORELEASE)
 
 PKG_SOURCE:=gst-plugins-base-$(PKG_VERSION).tar.xz
 PKG_SOURCE_URL:=https://gstreamer.freedesktop.org/src/gst-plugins-base
-PKG_HASH:=c0d8a84e3262e706ebc88831ca7349e5ae221274ef362599734573b3d3c028f3
+PKG_HASH:=960b7af4585700db0fdd5b843554e11e2564fed9e061f591fae88a7be6446fa3
 PKG_BUILD_DIR:=$(BUILD_DIR)/gst-plugins-base-$(PKG_VERSION)
 
 PKG_MAINTAINER:=W. Michael Petullo <mike@flyn.org> \
@@ -22,11 +22,9 @@ PKG_LICENSE:=LGPL-2.1-or-later GPL-2.0-or-later
 PKG_LICENSE_FILES:=COPYING.LIB COPYING
 PKG_CPE_ID:=cpe:/a:gstreamer:gst-plugins-base
 
-PKG_INSTALL:=1
-
 include $(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/nls.mk
-include ../../devel/meson/meson.mk
+include $(INCLUDE_DIR)/meson.mk
 
 PKG_CONFIG_DEPENDS:= \
 	CONFIG_PACKAGE_gst1-mod-alsa \
@@ -182,11 +180,14 @@ define Build/InstallDev
 		./usr/lib/libgst*-$(GST_VERSION).so* \
 		$(1)/usr/lib/ \
 	)
-	$(INSTALL_DIR) $(1)/usr/lib/gstreamer-$(GST_VERSION)
-	( cd $(PKG_INSTALL_DIR); $(CP) \
-		./usr/lib/gstreamer-$(GST_VERSION)/libgst*.so \
-		$(1)/usr/lib/gstreamer-$(GST_VERSION)/ \
-	)
+	if [ -d $(PKG_INSTALL_DIR)/usr/lib/gstreamer-$(GST_VERSION)/ ]; then \
+		$(INSTALL_DIR) $(1)/usr/lib/gstreamer-$(GST_VERSION); \
+		( cd $(PKG_INSTALL_DIR); $(FIND) \
+			./usr/lib/gstreamer-$(GST_VERSION)/ -name libgst*.so -print0 | \
+			xargs --null --no-run-if-empty $(CP) \
+			--target-directory=$(1)/usr/lib/gstreamer-$(GST_VERSION)/ \
+		) \
+	fi
 	$(INSTALL_DIR) $(1)/usr/lib/pkgconfig
 	( cd $(PKG_INSTALL_DIR); $(CP) \
 		./usr/lib/pkgconfig/gstreamer*-$(GST_VERSION).pc \
@@ -310,10 +311,10 @@ $(eval $(call GstBuildPlugin,volume,volume,audio controller,,+liboil))
 $(eval $(call GstBuildPlugin,alsa,ALSA audio source/sink,audio tag,,+alsa-lib))
 $(eval $(call GstBuildPlugin,ivorbisdec,Integer Vorbis decoder plugin for devices without floating point,audio tag,,+libvorbisidec))
 #$(eval $(call GstBuildPlugin,cdparanoia,cdparanoia,,+libcdparanoia))
-#$(eval $(call GstBuildPlugin,libvisual,libvisual audio visualization,,+alsa-lib))
+#$(eval $(call GstBuildPlugin,libvisual,libvisual audio visualization,,+libvisual))
 $(eval $(call GstBuildPlugin,ogg,ogg parser muxer demuxer,riff tag pbutils video,,+libogg))
 $(eval $(call GstBuildPlugin,opus,OPUS audio codec,pbutils video,,+libopus))
-#$(eval $(call GstBuildPlugin,pango,Pango text rendering and overlay plugin,,+libopus))
+#$(eval $(call GstBuildPlugin,pango,Pango text rendering and overlay plugin,,+pango))
 $(eval $(call GstBuildPlugin,theora,Theora,tag video,,+libogg +libtheora))
 $(eval $(call GstBuildPlugin,vorbis,Vorbis,audio tag,ogg,+libvorbis))
 

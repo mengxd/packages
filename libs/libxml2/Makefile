@@ -8,12 +8,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=libxml2
-PKG_VERSION:=2.9.10
+PKG_VERSION:=2.9.14
 PKG_RELEASE:=1
 
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=http://xmlsoft.org/sources/
-PKG_HASH:=aafee193ffb8fe0c82d4afef6ef91972cbaf5feea100edc2f262750611b4be1f
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
+PKG_SOURCE_URL:=@GNOME/libxml2/$(basename $(PKG_VERSION))
+PKG_HASH:=60d74a257d1ccec0475e749cba2f21559e48139efba6ff28224357c7c798dfee
 
 PKG_LICENSE:=MIT
 PKG_LICENSE_FILES:=COPYING
@@ -27,13 +27,14 @@ PKG_BUILD_PARALLEL:=0
 
 include $(INCLUDE_DIR)/host-build.mk
 include $(INCLUDE_DIR)/package.mk
+include $(INCLUDE_DIR)/nls.mk
 
 define Package/libxml2
   SECTION:=libs
   CATEGORY:=Libraries
   TITLE:=Gnome XML library
   URL:=http://xmlsoft.org/
-  DEPENDS:=+libpthread +zlib
+  DEPENDS:=+libpthread +zlib $(ICONV_DEPENDS)
 endef
 
 define Package/libxml2/description
@@ -80,7 +81,6 @@ CONFIGURE_ARGS += \
 	--with-html \
 	--without-ftp \
 	--without-http \
-	--without-iconv \
 	--without-iso8859x \
 	--without-legacy \
 	--with-output \
@@ -103,8 +103,9 @@ CONFIGURE_ARGS += \
 	--without-lzma
 
 HOST_CONFIGURE_ARGS += \
-	--enable-shared \
+	--disable-shared \
 	--enable-static \
+	--with-pic \
 	--with-c14n \
 	--without-catalog \
 	--with-debug \

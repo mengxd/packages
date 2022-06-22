@@ -8,24 +8,22 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=gst1-plugins-bad
-PKG_VERSION:=1.17.1
-PKG_RELEASE:=1
+PKG_VERSION:=1.18.5
+PKG_RELEASE:=$(AUTORELEASE)
 
-PKG_BUILD_DIR:=$(BUILD_DIR)/gst-plugins-bad-$(PKG_VERSION)
 PKG_SOURCE:=gst-plugins-bad-$(PKG_VERSION).tar.xz
 PKG_SOURCE_URL:=http://gstreamer.freedesktop.org/src/gst-plugins-bad/
-PKG_HASH:=598937c818d0955543318203faa28d826eb68d487934be4737e999ad272210d0
+PKG_HASH:=a164923b94f0d08578a6fcaeaac6e0c05da788a46903a1086870e9ca45ad678e
+PKG_BUILD_DIR:=$(BUILD_DIR)/gst-plugins-bad-$(PKG_VERSION)
 
 PKG_MAINTAINER:=W. Michael Petullo <mike@flyn.org> \
 		Ted Hess <thess@kitschensync.net>
 PKG_LICENSE:=LGPL-2.1-or-later GPL-2.0-or-later
 PKG_LICENSE_FILES:=COPYING.LIB COPYING
 
-PKG_INSTALL:=1
-
 include $(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/nls.mk
-include ../../devel/meson/meson.mk
+include $(INCLUDE_DIR)/meson.mk
 
 GST_BAD_LIBS:=
 GST_BAD_MODULES:=
@@ -308,6 +306,8 @@ $(eval $(call GstBuildLibrary,adaptivedemux,adaptivedemux,app uridownloader,))
 $(eval $(call GstBuildLibrary,photography,photography,,))
 $(eval $(call GstBuildLibrary,basecamerabinsrc,basecamerabinsrc,app,))
 $(eval $(call GstBuildLibrary,uridownloader,uridownloader,,))
+$(eval $(call GstBuildLibrary,codecparsers,codecparsers,,))
+$(eval $(call GstBuildLibrary,mpegts,mpegts,,))
 
 # 1: short name
 # 2: description
@@ -380,8 +380,8 @@ $(eval $(call GstBuildPlugin,legacyrawparse,rawparse support,audio video,,))
 $(eval $(call GstBuildPlugin,midi,midi support,audio,,))
 $(eval $(call GstBuildPlugin,mpegpsdemux,mpegpsdemux support,pbutils,,))
 $(eval $(call GstBuildPlugin,mpegpsmux,mpegpsmux support,,,))
-#$(eval $(call GstBuildPlugin,mpegtsdemux,mpegtsdemux support,mpegts pbutils,,))
-#$(eval $(call GstBuildPlugin,mpegtsmux,mpegtsmux support,video,,))
+$(eval $(call GstBuildPlugin,mpegtsdemux,mpegtsdemux support,codecparsers mpegts pbutils,,))
+$(eval $(call GstBuildPlugin,mpegtsmux,mpegtsmux support,mpegts video,,))
 $(eval $(call GstBuildPlugin,mxf,mxf support,audio video,,))
 $(eval $(call GstBuildPlugin,netsim,netsim support,,,))
 $(eval $(call GstBuildPlugin,pcapparse,pcapparse support,,,))

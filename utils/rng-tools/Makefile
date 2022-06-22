@@ -8,13 +8,13 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=rng-tools
-PKG_VERSION:=6.7
-PKG_RELEASE:=1
+PKG_VERSION:=6.15
+PKG_RELEASE:=2
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/nhorman/rng-tools
 PKG_SOURCE_VERSION:=v$(PKG_VERSION)
-PKG_MIRROR_HASH:=05cb68b8600025f362ea0875f5966b60f8195f91ed89b431996a48cd88b1e5b0
+PKG_MIRROR_HASH:=745a465062065104e2222ffc1b1bb3e0ce14626d44ee2176cb2a5c3723e3163a
 
 PKG_MAINTAINER:=Nathaniel Wesley Filardo <nwfilardo@gmail.com>
 PKG_LICENSE:=GPL-2.0-or-later
@@ -32,7 +32,7 @@ define Package/rng-tools
   CATEGORY:=Utilities
   TITLE:=Daemon for adding entropy to kernel entropy pool
   URL:=https://github.com/nhorman/rng-tools
-  DEPENDS:=+libsysfs
+  DEPENDS:=+libopenssl
 endef
 
 define Package/rng-tools/description
@@ -42,9 +42,9 @@ define Package/rng-tools/description
 endef
 
 CONFIGURE_ARGS += \
-	--without-libgcrypt \
 	--without-nistbeacon \
-	--without-pkcs11
+	--without-pkcs11 \
+	--without-rtlsdr
 
 ifndef CONFIG_USE_GLIBC
 	CONFIGURE_VARS += LIBS="-largp"

@@ -8,12 +8,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=libssh
-PKG_VERSION:=0.9.4
+PKG_VERSION:=0.9.6
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
 PKG_SOURCE_URL:=https://www.libssh.org/files/0.9/
-PKG_HASH:=150897a569852ac05aac831dc417a7ba8e610c86ca2e0154a99c6ade2486226b
+PKG_HASH:=86bcf885bd9b80466fe0e05453c58b877df61afa8ba947a58c356d7f0fab829b
 
 PKG_MAINTAINER:=Mislav Novakovic <mislav.novakovic@sartura.hr>
 PKG_LICENSE:=LGPL-2.1-or-later BSD-2-Clause
@@ -22,7 +22,6 @@ PKG_CPE_ID:=cpe:/a:libssh:libssh
 
 CMAKE_INSTALL:=1
 CMAKE_BINARY_SUBDIR:=build
-PKG_BUILD_PARALLEL:=1
 PKG_USE_MIPS16:=0
 
 include $(INCLUDE_DIR)/package.mk
@@ -41,7 +40,7 @@ define Package/libssh/description
  for client and server implementations.
 endef
 
-CMAKE_OPTIONS = \
+CMAKE_OPTIONS += \
 	-DHAVE_STRTOULL=1 \
 	-DHAVE_GETADDRINFO=1 \
 	-DHAVE_TERMIOS_H=1 \

@@ -1,13 +1,13 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=ariang
-PKG_VERSION:=1.1.6
-PKG_RELEASE:=1
+PKG_VERSION:=1.2.3
+PKG_RELEASE:=$(AUTORELEASE)
 
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=https://codeload.github.com/mayswind/AriaNg-DailyBuild/tar.gz/$(PKG_VERSION)?
-PKG_HASH:=ac5a55f1549c5458dab4422ddf420055909e11d6e5ec8db0f13e52241f6c2917
-PKG_BUILD_DIR:=$(BUILD_DIR)/AriaNg-DailyBuild-$(PKG_VERSION)
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).zip
+PKG_SOURCE_URL:=https://github.com/mayswind/AriaNg/releases/download/$(PKG_VERSION)
+PKG_HASH:=061af099d5772933889254ef926f34f973fd8c0ed82e24c7520b242eba00763f
+UNPACK_CMD=unzip -q -d $(1) $(DL_DIR)/$(PKG_SOURCE)
 
 PKG_MAINTAINER:=Ansuel Smith <ansuelsmth@gmail.com>
 PKG_LICENSE:=MIT
@@ -53,9 +53,9 @@ define Package/ariang/install
 	$(CP) \
 		$(PKG_BUILD_DIR)/{langs,css,js,fonts} \
 		$(PKG_BUILD_DIR)/index.html \
-		$(PKG_BUILD_DIR)/index.manifest \
 		$(PKG_BUILD_DIR)/LICENSE \
-		$(PKG_BUILD_DIR)/favicon.ico \
+		$(PKG_BUILD_DIR)/favicon.* \
+		$(PKG_BUILD_DIR)/robots.txt \
 		$(1)/www/ariang
 endef
 

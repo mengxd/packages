@@ -12,14 +12,15 @@ GO_PKG_BUILD_PKG:= \
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://$(GO_PKG)
-PKG_SOURCE_VERSION:=026aabaa659832804b01754aaadd2c0f420c68b6
-PKG_SOURCE_DATE:=2020-06-17
-PKG_MIRROR_HASH:=4ec8d3a7a99478dae9aef9f8337c14b91750164351963f9a6ed2288588d080e3
+PKG_SOURCE_VERSION:=f6ccccb1c082a432c2a5814aaedaca56af33d9ea
+PKG_SOURCE_DATE:=2022-06-02
+PKG_MIRROR_HASH:=92a23ff620c3cf3b05bc01a06721a9f78dfb6bc5b048dbcf70ea9542cec8e7a2
 
 PKG_MAINTAINER:=Gerard Ryan <G.M0N3Y.2503@gmail.com>
 
 PKG_BUILD_DEPENDS:=golang/host
 PKG_BUILD_PARALLEL:=1
+PKG_USE_MIPS16:=0
 
 include $(INCLUDE_DIR)/package.mk
 include ../../lang/golang/golang-package.mk
@@ -29,13 +30,15 @@ define Package/libnetwork
   CATEGORY:=Utilities
   TITLE:=networking for containers
   URL:=https://github.com/docker/libnetwork
-  DEPENDS:=$(GO_ARCH_DEPENDS) @(aarch64||arm||x86_64)
+  DEPENDS:=$(GO_ARCH_DEPENDS)
 endef
 
 define Package/libnetwork/description
 Libnetwork provides a native Go implementation for connecting containers.
 The goal of libnetwork is to deliver a robust Container Network Model that provides a consistent programming interface and the required network abstractions for applications.
 endef
+
+GO_PKG_BUILD_VARS += GO111MODULE=auto
 
 define Package/libnetwork/install
 	$(call GoPackage/Package/Install/Bin,$(PKG_INSTALL_DIR))

@@ -8,8 +8,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=netdata
-PKG_VERSION:=1.23.2
-PKG_RELEASE:=1
+PKG_VERSION:=1.33.1
+PKG_RELEASE:=$(AUTORELEASE)
 
 PKG_MAINTAINER:=Josef Schlehofer <pepe.schlehofer@gmail.com>, Daniel Engberg <daniel.engberg.lists@pyret.net>
 PKG_LICENSE:=GPL-3.0-or-later
@@ -17,8 +17,9 @@ PKG_LICENSE_FILES:=COPYING
 PKG_CPE_ID:=cpe:/a:my-netdata:netdata
 
 PKG_SOURCE:=$(PKG_NAME)-v$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=https://codeload.github.com/netdata/netdata/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=b6dd13292e0b1fb4137b1f7c0dc3d7c5e8a1bf408b82c2b8394f3751800e0eb5
+PKG_SOURCE_URL:=https://github.com/netdata/netdata/releases/download/v$(PKG_VERSION)
+PKG_HASH:=20ba8695d87187787b27128ac3aab9b09aa29ca6b508c48542e0f7d50ec9322b
+PKG_BUILD_DIR=$(BUILD_DIR)/$(PKG_NAME)-v$(PKG_VERSION)
 
 PKG_INSTALL:=1
 PKG_BUILD_PARALLEL:=1
@@ -52,16 +53,24 @@ CONFIGURE_ARGS += \
 	--with-math \
 	--disable-x86-sse \
 	--enable-lto \
-        --disable-cloud\
+	--disable-ebpf \
 	--without-libcap \
 	--disable-https \
 	--disable-dbengine \
+	--disable-compression \
 	--disable-plugin-nfacct \
 	--disable-plugin-freeipmi \
 	--disable-plugin-cups \
 	--disable-plugin-xenstat \
 	--disable-backend-prometheus-remote-write \
-	--enable-jsonc
+	--disable-unit-tests \
+	--disable-ml \
+	--disable-cloud
+
+define Build/Configure
+	$(SED) 's/m4_esyscmd(\[git describe .*\])/$(PKG_VERSION)/' $(PKG_BUILD_DIR)/configure.ac
+	$(Build/Configure/Default)
+endef
 
 define Package/netdata/conffiles
 /etc/netdata/
