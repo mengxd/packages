@@ -9,12 +9,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=cups
-PKG_VERSION:=2.2.12
-PKG_RELEASE:=2
+PKG_VERSION:=2.3.3
+PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION)-source.tar.gz
 PKG_SOURCE_URL:=https://github.com/apple/cups/releases/download/v$(PKG_VERSION)/
-PKG_HASH:=0f61ab449e4748a24c6ab355b481ff7691247a140d327b2b7526fce34b7f9aa8
+PKG_HASH:=261fd948bce8647b6d5cb2a1784f0c24cc52b5c4e827b71d726020bcc502f3ee
 PKG_MAINTAINER:=Luiz Angelo Daros de Luca <luizluca@gmail.com>
 PKG_LICENSE:=GPL-2.0
 PKG_LICENSE_FILES:=LICENSE.txt
