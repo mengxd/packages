@@ -4,8 +4,10 @@
 # Get the interface of lan network.
 lan_network_interface="$(uci -q get network.lan.device)"
 
-# Check if lan is a bridge.
-[ -n "$lan_network_interface" ] && lan_section=$(uci show network | grep "name='$lan_network_interface'" | cut -d. -f2)
+# If the interface exists, check if it is a bridge.
+[ -n "$lan_network_interface" ] && for section in $(uci show network | grep "name='$lan_network_interface'" | cut -d. -f2); do
+	[ "$(uci -q get network.$section.type)" = bridge ] && lan_section="$section" && break
+done
 if [ -n "$lan_section" ]; then
 	# Save all interfaces.
 	lan_interfaces=$(uci get network.$lan_section.ports)
@@ -24,8 +26,10 @@ fi
 # Get the interface of wan network.
 wan_network_interface="$(uci -q get network.wan.device)"
 
-# Check if wan is a bridge.
-[ -n "$wan_network_interface" ] && wan_section=$(uci show network | grep "name='$wan_network_interface'" | cut -d. -f2)
+# If the interface exists, check if it is a bridge.
+[ -n "$wan_network_interface" ] && for section in $(uci show network | grep "name='$wan_network_interface'" | cut -d. -f2); do
+	[ "$(uci -q get network.$section.type)" = bridge ] && wan_section="$section" && break
+done
 if [ -n "$wan_section" ]; then
 	# Save all interfaces.
 	wan_network_interface="$(uci get network.$wan_section.ports)"
@@ -38,35 +42,37 @@ fi
 # interfaces other than the one used for lan, if there are any.
 final_wan_interfaces="$wan_network_interface $(echo $lan_interfaces | tr ' ' '\n' | grep -v "^$lan_network_interface$")"
 
-# If there are no suitable wan interfaces, exit with code 1.
-[ -z "$(echo "$final_wan_interfaces" | tr ' ' '\n')" ] && exit 1
+# Exit if there are no suitable wan interfaces.
+[ -z "$(echo "$final_wan_interfaces" | tr ' ' '\n')" ] && exit
 
 # Delete existing wan and wan6 networks.
 uci delete network.wan
 uci -q delete network.wan6
 fw_section=$(uci show firewall | grep "name='wan'" | cut -d. -f2)
 
-# If firewall section for wan doesn't exist, create one.
 if [ -n "$fw_section" ]; then
 	uci -q del_list firewall.$fw_section.network='wan'
 	uci -q del_list firewall.$fw_section.network='wan6'
+# If firewall section for wan doesn't exist, create one.
 else
 	fw_section=$(uci add firewall zone)
-	uci set firewall.@rule[-1].name='wan'
-	uci set firewall.@rule[-1].input='REJECT'
-	uci set firewall.@rule[-1].output='ACCEPT'
-	uci set firewall.@rule[-1].forward='DROP'
-	uci set firewall.@rule[-1].masq='1'
-	uci set firewall.@rule[-1].mtu_fix='1'
+	uci set firewall.@zone[-1].name='wan'
+	uci set firewall.@zone[-1].input='REJECT'
+	uci set firewall.@zone[-1].output='ACCEPT'
+	uci set firewall.@zone[-1].forward='DROP'
+	uci set firewall.@zone[-1].masq='1'
+	uci set firewall.@zone[-1].mtu_fix='1'
 fi
 
 index=1
 for dev in $final_wan_interfaces; do
+	# Only metrics 1 to 8 must be allocated for WAN so do not add any more.
+	[ "$index" -gt 8 ] && break
+
 	uci -q delete network.wan$index
 	uci set network.wan$index=interface
 	uci set network.wan$index.device="$dev"
 	uci set network.wan$index.proto='dhcp'
-	uci set network.wan$index.peerdns='0'
 	uci set network.wan$index.metric="$index"
 
 	# Add every wan network entry to firewall wan zone.
@@ -75,15 +81,7 @@ for dev in $final_wan_interfaces; do
 	index=$((index + 1))
 done
 
-# dnsmasq Configuration
-# As we don't want to use the DNS servers advertised by WANs, set up DNS
-# forwarding. Use 8.8.8.8 and 8.8.4.4.
-uci -q del_list dhcp.@dnsmasq[0].server='8.8.8.8'
-uci -q del_list dhcp.@dnsmasq[0].server='8.8.4.4'
-uci add_list dhcp.@dnsmasq[0].server='8.8.8.8'
-uci add_list dhcp.@dnsmasq[0].server='8.8.4.4'
-
-# xray Configuration
+# Configure xray.
 uci set xray.enabled.enabled='1'
 
 # Add rule to use routing table 100 for transparent proxy traffic.
@@ -105,3 +103,6 @@ uci set network.@route[-1].table='100'
 
 # Commit changes.
 uci commit
+
+# Enable bonding and ignore the non-zero exit code of bsbf-bonding.
+bsbf-bonding --enable || true
