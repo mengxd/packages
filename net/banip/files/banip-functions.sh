@@ -102,6 +102,7 @@ ban_packages=""
 ban_trigger=""
 ban_resolver=""
 ban_enabled="0"
+ban_confload="0"
 ban_debug="0"
 
 # gather system information
@@ -288,6 +289,8 @@ f_log() {
 f_conf() {
 	local rir ccode region country
 
+	[ "${ban_confload}" = "1" ] && return 0
+
 	config_cb() {
 		option_cb() {
 			local option="${1}" value="${2//\"/\\\"}"
@@ -296,7 +299,7 @@ f_conf() {
 			*[!a-zA-Z0-9_]*) ;;
 
 			*)
-				eval "${option}=\"\${value}\""
+				[ -n "${value}" ] && eval "${option}=\"\${value}\""
 				;;
 			esac
 		}
@@ -322,6 +325,7 @@ f_conf() {
 		}
 	}
 	config_load banip
+	ban_confload="1"
 
 	if [ -f "${ban_logreadfile}" ]; then
 		ban_logreadcmd="$(command -v tail)"
@@ -512,6 +516,9 @@ f_actual() {
 f_getdl() {
 	local fetch fetch_list insecure update="0"
 
+	# check if the configured fetch utility is available and has SSL support,
+	# if not try to find an alternative with SSL support or log an error if not found
+	#
 	ban_fetchcmd="$(command -v "${ban_fetchcmd}" 2>/dev/null)"
 	if [ -z "${ban_fetchcmd}" ]; then
 		fetch_list="curl wget-ssl libustream-openssl libustream-wolfssl libustream-mbedtls"
@@ -538,6 +545,17 @@ f_getdl() {
 	fi
 
 	[ -z "${ban_fetchcmd}" ] && f_log "err" "download utility with SSL support not found, please set 'ban_fetchcmd' manually"
+
+	# check the fetch retry value
+	#
+	case "${ban_fetchretry}" in
+	0* | *[!0-9]*)
+		ban_fetchretry="5"
+		;;
+	esac
+
+	# set fetch parameters based on the fetch utility and check if insecure fetching is enabled
+	#
 	case "${ban_fetchcmd##*/}" in
 	"curl")
 		[ "${ban_fetchinsecure}" = "1" ] && insecure="--insecure"
@@ -750,13 +768,13 @@ f_etag() {
 		# fetch http headers and extract http code and etag/last-modified header
 		#
 		http_head="$("${ban_fetchcmd}" ${ban_etagparm} "${feed_url}" 2>&1)"
-		http_code="$(printf '%s' "${http_head}" | "${ban_awkcmd}" 'tolower($0)~/^[[:space:]]*http\/[0123\.]+ /{printf "%s",$2}')"
-		etag_id="$(printf '%s' "${http_head}" | "${ban_awkcmd}" 'tolower($0)~/^[[:space:]]*etag: /{gsub("\"","");printf "%s",$2}')"
+		http_code="$(printf '%s' "${http_head}" | "${ban_awkcmd}" 'tolower($0)~/^[[:space:]]*http\/[0123\.]+ /{code=$2} END{printf "%s",code}')"
+		etag_id="$(printf '%s' "${http_head}" | "${ban_awkcmd}" 'tolower($0)~/^[[:space:]]*etag: /{gsub(/[\r"]/,"");id=$2} END{printf "%s",id}')"
 
 		# if etag header is not present, try to use last-modified header as fallback for change detection
 		#
 		if [ -z "${etag_id}" ]; then
-			etag_id="$(printf '%s' "${http_head}" | "${ban_awkcmd}" 'tolower($0)~/^[[:space:]]*last-modified: /{gsub(/[Ll]ast-[Mm]odified:|[[:space:]]|,|:/,"");printf "%s\n",$1}')"
+			etag_id="$(printf '%s' "${http_head}" | "${ban_awkcmd}" 'tolower($0)~/^[[:space:]]*last-modified: /{gsub(/[Ll]ast-[Mm]odified:|[[:space:]]|,|:/,"");lm=$1} END{printf "%s",lm}')"
 		fi
 
 		# acquire exclusive lock on etag file to serialize concurrent read-modify-write from parallel feeds
@@ -2055,8 +2073,11 @@ f_report() {
 					set_dport="${set_proto}: $(f_trim "${set_dport}")"
 				fi
 				if [ "${ban_nftcount}" = "1" ]; then
-					set_elements="$("${ban_jsoncmd}" -i "${set_jsn}" -l50 -qe '@.nftables[*].set.elem[*][@.counter.packets>0].val' |
-						"${ban_awkcmd}" -F '[ ,]' '{ORS=" ";if($2=="\"range\":"||$2=="\"concat\":")printf"%s, ",$4;else if($2=="\"prefix\":")printf"%s, ",$5;else printf"\"%s\", ",$1}')"
+					"${ban_jsoncmd}" -i "${set_jsn}" -qe '@.nftables[*].set.elem[*][@.counter.packets>0].counter.packets' >"${set_jsn}.cnt"
+					"${ban_jsoncmd}" -i "${set_jsn}" -qe '@.nftables[*].set.elem[*][@.counter.packets>0].val' >"${set_jsn}.val"
+					set_elements="$("${ban_awkcmd}" 'NR==FNR{p[FNR]=$0;next}{print p[FNR]"\t"$0}' "${set_jsn}.cnt" "${set_jsn}.val" |
+						"${ban_sortcmd}" -k1,1nr |
+						"${ban_awkcmd}" -F '\t' 'NR<=50{split($2,a,/[ ,]/);ORS=" ";if(a[2]=="\"range\":"||a[2]=="\"concat\":")printf"%s, ",a[4];else if(a[2]=="\"prefix\":")printf"%s, ",a[5];else printf"\"%s\", ",a[1]}')"
 				fi
 				if [ -n "${set_cntinbound}" ]; then
 					set_inbound="ON"
@@ -2078,7 +2099,7 @@ f_report() {
 					\"port\": \"${set_dport:-"-"}\", \
 					\"set_elements\": [ ${set_elements%%??} ] \
 				}" >"${report_jsn}.${item}"
-				"${ban_rmcmd}" -f "${set_jsn}"
+				"${ban_rmcmd}" -f "${set_jsn}"*
 			) &
 			[ "${cnt}" -gt "${ban_cores}" ] && wait -n
 			cnt="$((cnt + 1))"
